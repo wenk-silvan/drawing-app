@@ -12,7 +12,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     private var canvas: Canvas? = null
     private var canvasBitmap: Bitmap? = null
     private var canvasPaint: Paint? = null
-    private var color = Color.BLACK
+    private var color = Color.parseColor("#3d3d3d")
     private var drawPaint: Paint? = null
     private var drawPath: CustomPath? = null
     private val paths = ArrayList<CustomPath>()
@@ -76,6 +76,11 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         }
         invalidate()
         return true
+    }
+
+    fun setColor(newColor: String) {
+        this.color = Color.parseColor(newColor)
+        this.drawPaint!!.color = this.color
     }
 
     fun setSizeForBrush(newSize: BrushSize) {

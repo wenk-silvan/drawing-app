@@ -1,8 +1,10 @@
 package ch.wenksi.kidsdrawingapp
 
 import android.app.Dialog
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -26,8 +28,24 @@ class MainActivity : AppCompatActivity() {
         drawing_view.setSizeForBrush(BrushSize.SMALL)
         this.imageButtonCurrentPaint = ll_paint_colors[8] as ImageButton
         this.imageButtonCurrentPaint!!.setImageDrawable(
-            ContextCompat.getDrawable(this, R.drawable.pallet_selected))
+            ContextCompat.getDrawable(this, R.drawable.pallet_selected)
+        )
         ib_brush.setOnClickListener { this.showBrushSizeChooserDialog() }
+    }
+
+    fun paintClicked(view: View) {
+        if (view !== this.imageButtonCurrentPaint) {
+            val imageButton = view as ImageButton
+            val colorHex = imageButton.tag.toString()
+            drawing_view.setColor(colorHex)
+            imageButton.setImageDrawable(
+                ContextCompat.getDrawable(this, R.drawable.pallet_selected)
+            )
+            this.imageButtonCurrentPaint!!.setImageDrawable(
+                ContextCompat.getDrawable(this, R.drawable.pallet_normal)
+            )
+            this.imageButtonCurrentPaint = view
+        }
     }
 
     private fun showBrushSizeChooserDialog() {
