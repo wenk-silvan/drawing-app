@@ -16,19 +16,10 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     private var drawPaint: Paint? = null
     private var drawPath: CustomPath? = null
     private val paths = ArrayList<CustomPath>()
+    private val undoPaths = ArrayList<CustomPath>()
 
     init {
         this.setUpDrawing()
-    }
-
-    private fun setUpDrawing() {
-        this.drawPaint = Paint()
-        this.drawPaint!!.color = color
-        this.drawPaint!!.style = Paint.Style.STROKE
-        this.drawPaint!!.strokeJoin = Paint.Join.ROUND
-        this.drawPaint!!.strokeCap = Paint.Cap.ROUND
-        this.drawPath = CustomPath(this.color, this.brushSize)
-        this.canvasPaint = Paint(Paint.DITHER_FLAG)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -42,13 +33,13 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         super.onDraw(canvas)
         canvas.drawBitmap(this.canvasBitmap!!, 0f, 0f, this.canvasPaint)
 
-        for(path in this.paths) {
+        for (path in this.paths) {
             this.drawPaint!!.strokeWidth = path.brushThickness
             this.drawPaint!!.color = path.color
             canvas.drawPath(path, this.drawPaint!!)
         }
 
-        if(!this.drawPath!!.isEmpty) {
+        if (!this.drawPath!!.isEmpty) {
             this.drawPaint!!.strokeWidth = this.drawPath!!.brushThickness
             this.drawPaint!!.color = this.drawPath!!.color
             canvas.drawPath(this.drawPath!!, this.drawPaint!!)
@@ -58,7 +49,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         val touchX = event?.x
         val touchY = event?.y
-        when(event?.action) {
+        when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
                 this.drawPath!!.color = this.color
                 this.drawPath!!.brushThickness = this.brushSize
@@ -78,6 +69,13 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         return true
     }
 
+    fun onClickUndo() {
+        if (this.paths.size > 0) {
+            this.undoPaths.add(this.paths.removeAt(this.paths.size - 1))
+            invalidate()
+        }
+    }
+
     fun setColor(newColor: String) {
         this.color = Color.parseColor(newColor)
         this.drawPaint!!.color = this.color
@@ -87,11 +85,22 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         this.brushSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             newSize.size,
-            resources.displayMetrics)
+            resources.displayMetrics
+        )
         this.drawPaint!!.strokeWidth = this.brushSize
     }
 
-    internal inner class CustomPath(var color: Int, var brushThickness: Float): Path()
+    private fun setUpDrawing() {
+        this.drawPaint = Paint()
+        this.drawPaint!!.color = color
+        this.drawPaint!!.style = Paint.Style.STROKE
+        this.drawPaint!!.strokeJoin = Paint.Join.ROUND
+        this.drawPaint!!.strokeCap = Paint.Cap.ROUND
+        this.drawPath = CustomPath(this.color, this.brushSize)
+        this.canvasPaint = Paint(Paint.DITHER_FLAG)
+    }
+
+    internal inner class CustomPath(var color: Int, var brushThickness: Float) : Path()
 }
 
 

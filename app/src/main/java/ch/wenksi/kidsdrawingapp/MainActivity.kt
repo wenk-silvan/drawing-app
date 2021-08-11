@@ -61,13 +61,17 @@ class MainActivity : AppCompatActivity() {
         ib_brush.setOnClickListener { this.showBrushSizeChooserDialog() }
         ib_gallery.setOnClickListener {
             if (this.isReadStorageAllowed()) {
-                val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                startActivityForResult(pickPhotoIntent, GALLERY)
+                this.getBackgroundImageFromGallery()
             } else {
                 this.requestStoragePermission()
-                //TODO: read image from gallery
             }
         }
+        ib_undo.setOnClickListener { drawing_view.onClickUndo() }
+    }
+
+    private fun getBackgroundImageFromGallery() {
+        val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        startActivityForResult(pickPhotoIntent, GALLERY)
     }
 
     override fun onRequestPermissionsResult(
@@ -83,6 +87,7 @@ class MainActivity : AppCompatActivity() {
                     "Permission granted to read the storage file",
                     Toast.LENGTH_SHORT
                 ).show()
+                this.getBackgroundImageFromGallery()
             } else {
                 Toast.makeText(
                     this@MainActivity,
