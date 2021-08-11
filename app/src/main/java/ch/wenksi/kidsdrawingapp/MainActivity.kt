@@ -4,9 +4,12 @@ import android.app.Dialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.core.view.get
 import androidx.core.view.setMargins
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.view.*
@@ -14,11 +17,16 @@ import kotlinx.android.synthetic.main.dialog_brush_size.*
 
 class MainActivity : AppCompatActivity() {
 
+    private var imageButtonCurrentPaint: ImageButton? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         drawing_view.setSizeForBrush(BrushSize.SMALL)
+        this.imageButtonCurrentPaint = ll_paint_colors[8] as ImageButton
+        this.imageButtonCurrentPaint!!.setImageDrawable(
+            ContextCompat.getDrawable(this, R.drawable.pallet_selected))
         ib_brush.setOnClickListener { this.showBrushSizeChooserDialog() }
     }
 
