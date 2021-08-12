@@ -6,6 +6,10 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,6 +24,9 @@ import androidx.core.view.setMargins
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.dialog_brush_size.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
@@ -42,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                         )
                             .show()
                     }
-                } catch(e: Exception) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
@@ -67,10 +74,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
         ib_undo.setOnClickListener { drawing_view.onClickUndo() }
+        ib_save.setOnClickListener {
+            if (this.isReadStorageAllowed()) {
+                BitmapAsyncTask(this.getBitmapFromView(fl_drawing_view_container)).execute()
+            } else {
+                this.requestStoragePermission()
+            }
+        }
     }
 
     private fun getBackgroundImageFromGallery() {
-        val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        val pickPhotoIntent =
+            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(pickPhotoIntent, GALLERY)
     }
 
@@ -87,7 +102,6 @@ class MainActivity : AppCompatActivity() {
                     "Permission granted to read the storage file",
                     Toast.LENGTH_SHORT
                 ).show()
-                this.getBackgroundImageFromGallery()
             } else {
                 Toast.makeText(
                     this@MainActivity,
@@ -112,6 +126,19 @@ class MainActivity : AppCompatActivity() {
             )
             this.imageButtonCurrentPaint = view
         }
+    }
+
+    private fun getBitmapFromView(view: View): Bitmap {
+        val returnedBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(returnedBitmap)
+        val bgDrawable = view.background
+        if (bgDrawable != null) {
+            bgDrawable.draw(canvas)
+        } else {
+            canvas.drawColor((Color.WHITE))
+        }
+        view.draw(canvas)
+        return returnedBitmap
     }
 
     private fun isReadStorageAllowed(): Boolean {
@@ -150,31 +177,65 @@ class MainActivity : AppCompatActivity() {
         val brushDialog = Dialog(this)
         brushDialog.setContentView(R.layout.dialog_brush_size)
         brushDialog.setTitle("Brush size: ")
-        // val param = iv_selected_brush.layoutParams as ViewGroup.MarginLayoutParams
 
         brushDialog.ib_small_brush.setOnClickListener {
             drawing_view.setSizeForBrush(BrushSize.SMALL)
-            iv_selected_brush.setImageResource(R.drawable.small)
-            // param.setMargins(25, 25, 25, 25)
-            // iv_selected_brush.layoutParams = param
             brushDialog.dismiss()
         }
         brushDialog.ib_medium_brush.setOnClickListener {
             drawing_view.setSizeForBrush(BrushSize.MEDIUM)
-            iv_selected_brush.setImageResource(R.drawable.medium)
-            // param.setMargins(20, 20, 20, 20)
-            // iv_selected_brush.layoutParams = param
             brushDialog.dismiss()
         }
         brushDialog.ib_large_brush.setOnClickListener {
             drawing_view.setSizeForBrush(BrushSize.LARGE)
-            iv_selected_brush.setImageResource(R.drawable.large)
-            // param.setMargins(15, 15, 15, 15)
-            // iv_selected_brush.layoutParams = param
             brushDialog.dismiss()
         }
 
         brushDialog.show()
+    }
+
+    private inner class BitmapAsyncTask(val bitmap: Bitmap) : AsyncTask<Any, Void, String>() {
+        override fun doInBackground(vararg params: Any?): String {
+            var result = ""
+            if (bitmap != null) {
+                try {
+                    val bytes = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 90, bytes)
+                    val f = File(
+                        externalCacheDir!!.absoluteFile.toString()
+                                + File.separator
+                                + "KidsDrawingApp_"
+                                + System.currentTimeMillis() / 1000
+                                + ".png"
+                    )
+                    val fos = FileOutputStream(f)
+                    fos.write(bytes.toByteArray())
+                    fos.close()
+                    result = f.absolutePath
+                } catch (e: Exception) {
+                    result = ""
+                    e.printStackTrace()
+                }
+            }
+            return result
+        }
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+            if (!result!!.isEmpty()) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "File saved successfully: $result",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Something went wrong while saving the file.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     companion object {
